@@ -1135,9 +1135,9 @@
         border-top: 1px solid var(--border);
       }
       .letterhead-page {
-        transform: scale(0.48);
-        transform-origin: top center;
-        margin-bottom: -580px; 
+        zoom: 0.55;
+        transform: none !important;
+        margin-bottom: 24px !important;
       }
       .modal-content {
         width: 95%;
@@ -1148,24 +1148,27 @@
       }
     }
     
+    @media (max-width: 600px) {
+      .letterhead-page {
+        zoom: 0.50;
+      }
+    }
+
     @media (max-width: 500px) {
       .letterhead-page {
-        transform: scale(0.44);
-        margin-bottom: -628px;
+        zoom: 0.46;
       }
     }
     
     @media (max-width: 420px) {
       .letterhead-page {
-        transform: scale(0.40);
-        margin-bottom: -673px;
+        zoom: 0.42;
       }
     }
     
     @media (max-width: 360px) {
       .letterhead-page {
-        transform: scale(0.35);
-        margin-bottom: -730px;
+        zoom: 0.38;
       }
     }
   </style>
