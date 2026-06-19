@@ -1,0 +1,2868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vansora Agro – Letterhead Editor</title>
+  <meta name="description" content="Professional letterhead template editor for Vansora Agro Pvt. Ltd. Create and export formatted letters with fixed company branding." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --teal:       #007b8a;
+      --teal-light: #009baa;
+      --teal-dark:  #005f6b;
+      --orange:     #e8862a;
+      --orange-light:#f4a54e;
+      --text-dark:  #1a1a2e;
+      --text-mid:   #3a3a5c;
+      --text-light: #7a7a9a;
+      --bg-app:     #0f0f23;
+      --bg-panel:   #16213e;
+      --bg-card:    #1a2744;
+      --border:     rgba(255,255,255,0.08);
+      --toolbar-bg: #1e2d50;
+      --shadow-glow:0 0 40px rgba(0,123,138,0.2);
+      --radius:     12px;
+      --font-main:  'Inter', sans-serif;
+    }
+
+    body {
+      font-family: var(--font-main);
+      background: var(--bg-app);
+      color: #e8eaf6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ===== TOP NAV ===== */
+    .app-nav {
+      background: linear-gradient(135deg, var(--bg-panel) 0%, #0d1b3e 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-brand-icon {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, var(--teal), var(--teal-light));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 4px 16px rgba(0,123,138,0.4);
+    }
+
+    .nav-brand-text h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.3px;
+    }
+    .nav-brand-text span {
+      font-size: 11px;
+      color: var(--teal-light);
+      font-weight: 400;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--font-main);
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      letter-spacing: 0.3px;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--teal), var(--teal-light));
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(0,123,138,0.35);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,123,138,0.5);
+    }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.07);
+      color: #c8d0e8;
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+    }
+
+    .btn-orange {
+      background: linear-gradient(135deg, var(--orange), var(--orange-light));
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(232,134,42,0.35);
+    }
+    .btn-orange:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(232,134,42,0.5);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: #c8d0e8;
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.05); color: #fff; }
+
+    /* ===== MAIN LAYOUT ===== */
+    .app-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: calc(100vh - 64px);
+    }
+
+    /* ===== LEFT SIDEBAR ===== */
+    .sidebar {
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      padding: 20px 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .sidebar-section {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .sidebar-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--teal-light);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tool-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .tool-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .tool-label {
+      font-size: 11px;
+      color: #8892b0;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    .tool-select, .tool-input {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: #e8eaf6;
+      font-size: 12px;
+      font-family: var(--font-main);
+      padding: 8px 10px;
+      outline: none;
+      transition: border-color 0.2s;
+      cursor: pointer;
+      appearance: none;
+    }
+    .tool-select:focus, .tool-input:focus {
+      border-color: var(--teal-light);
+      background: rgba(0,123,138,0.08);
+    }
+    .tool-select option { background: #1a2744; color: #e8eaf6; }
+
+    .tool-btn {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: #c8d0e8;
+      font-size: 13px;
+      font-family: var(--font-main);
+      padding: 8px 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+    }
+    .tool-btn:hover {
+      background: rgba(0,123,138,0.2);
+      border-color: var(--teal-light);
+      color: #fff;
+    }
+    .tool-btn.active {
+      background: linear-gradient(135deg, var(--teal), var(--teal-light));
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(0,123,138,0.4);
+    }
+
+    .color-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .color-picker-wrap {
+      position: relative;
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      transition: border-color 0.2s;
+      flex-shrink: 0;
+    }
+    .color-picker-wrap:hover { border-color: var(--teal-light); }
+    .color-picker-wrap input[type="color"] {
+      position: absolute;
+      inset: -4px;
+      width: calc(100% + 8px);
+      height: calc(100% + 8px);
+      cursor: pointer;
+      border: none;
+      outline: none;
+      padding: 0;
+    }
+
+    .color-presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      flex: 1;
+    }
+
+    .color-swatch {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: transform 0.15s;
+      border: 2px solid transparent;
+    }
+    .color-swatch:hover { transform: scale(1.2); border-color: #fff; }
+
+    .slider-wrap { display: flex; align-items: center; gap: 10px; }
+    .slider-wrap input[type="range"] {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 4px;
+      background: linear-gradient(to right, var(--teal), var(--teal-light));
+      border-radius: 4px;
+      outline: none;
+      cursor: pointer;
+    }
+    .slider-wrap input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--teal-light);
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,123,138,0.5);
+    }
+    .slider-val {
+      font-size: 11px;
+      color: var(--teal-light);
+      min-width: 30px;
+      text-align: right;
+      font-weight: 600;
+    }
+
+    /* ===== MAIN CONTENT (EDITOR AREA) ===== */
+    .editor-area {
+      background: #1a1a2e;
+      padding: 30px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      min-height: calc(100vh - 64px);
+    }
+
+    /* ===== STAMP UPLOAD ZONE ===== */
+    .stamp-upload-zone {
+      border: 2px dashed rgba(0,123,138,0.4);
+      border-radius: 10px;
+      padding: 16px 10px;
+      text-align: center;
+      cursor: pointer;
+      color: #8892b0;
+      transition: all 0.2s;
+      background: rgba(0,123,138,0.04);
+    }
+    .stamp-upload-zone:hover {
+      border-color: var(--teal-light);
+      background: rgba(0,123,138,0.1);
+      color: var(--teal-light);
+    }
+
+    /* ===== STAMP IMAGE INSIDE EDITABLE ===== */
+    .lh-editable .stamp-img {
+      display: inline-block;
+      cursor: move;
+      user-select: none;
+      position: relative;
+      vertical-align: bottom;
+      transition: box-shadow 0.15s;
+    }
+    .lh-editable .stamp-img img {
+      display: block;
+      max-width: 100%;
+    }
+    .lh-editable .stamp-img.selected {
+      outline: 2px dashed var(--teal-light);
+      outline-offset: 3px;
+    }
+    /* Resize handle */
+    .lh-editable .stamp-img .stamp-resize {
+      position: absolute;
+      bottom: -6px;
+      right: -6px;
+      width: 14px;
+      height: 14px;
+      background: var(--teal-light);
+      border-radius: 50%;
+      cursor: se-resize;
+      display: none;
+    }
+    .lh-editable .stamp-img.selected .stamp-resize {
+      display: block;
+    }
+
+    .page-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      align-self: flex-end;
+    }
+
+    .page-label {
+      font-size: 12px;
+      color: #8892b0;
+    }
+
+    /* ===== LETTERHEAD PAGE ===== */
+    .letterhead-page {
+      width: 794px;   /* A4 at 96dpi */
+      height: 1123px; /* Locked A4 Height */
+      background: #ffffff;
+      box-shadow: 0 8px 60px rgba(0,0,0,0.6), var(--shadow-glow);
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 24px;
+      flex-shrink: 0;
+    }
+    
+    .page-delete-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255,0,0,0.1);
+      color: red;
+      border: 1px solid rgba(255,0,0,0.2);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      z-index: 10;
+      display: none;
+    }
+    .letterhead-page:hover .page-delete-btn {
+      display: block;
+    }
+    .page-delete-btn:hover {
+      background: red;
+      color: white;
+    }
+
+    #documentContainer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    /* ===== HEADER ===== */
+    .lh-header {
+      padding: 22px 32px 0 32px;
+      pointer-events: none;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .lh-header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .lh-logo-block {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .lh-logo-img {
+      width: 110px;
+      height: auto;
+    }
+
+    .lh-iec-block {
+      text-align: right;
+      line-height: 1.7;
+    }
+
+    .lh-iec-line {
+      font-size: 11.5px;
+      color: #1a1a1a;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+    }
+    .lh-iec-line span {
+      font-weight: 700;
+      color: #111;
+    }
+
+    .lh-divider {
+      height: 2.5px;
+      background: linear-gradient(to right, #e8862a, #007b8a);
+      margin: 14px 0 0 0;
+      border-radius: 2px;
+    }
+
+    /* ===== EDITABLE MIDDLE ===== */
+    .lh-content-wrap {
+      flex: 1;
+      min-height: 0;        /* Critical: lets flex child shrink below content size */
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .lh-watermark {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.055;
+    }
+
+    .lh-watermark svg {
+      width: 400px;
+      height: 400px;
+    }
+
+    .lh-editable {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      min-height: 0;
+      padding: 24px 36px;
+      outline: none;
+      font-family: 'Times New Roman', serif;
+      font-size: 14px;
+      color: #1a1a1a;
+      line-height: 1.8;
+      cursor: text;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      overflow: hidden;
+      /* height set explicitly by JS via recalcEditableHeights() */
+    }
+
+    /* Preserve Word list and paragraph formatting */
+    .lh-editable p {
+      margin: 0 0 4px 0;
+    }
+    .lh-editable ol,
+    .lh-editable ul {
+      padding-left: 2em;
+      margin: 4px 0;
+    }
+    .lh-editable li {
+      margin-bottom: 4px;
+    }
+    /* Word numbered paragraphs — keep hanging indent */
+    .lh-editable p[style*="margin-left"],
+    .lh-editable p[style*="text-indent"] {
+      /* Preserved from Word — do not override */
+    }
+
+    .lh-editable:empty::before {
+      content: 'Start typing your letter content here...\A\AYou can format text using the tools in the left panel. This area is fully editable — use bold, italic, different fonts, sizes, and colors.';
+      white-space: pre;
+      color: #aab0c0;
+      font-style: italic;
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    .lh-editable:focus {
+      outline: 2px dashed rgba(0,123,138,0.35);
+      outline-offset: 4px;
+    }
+
+    /* Editing indicator border */
+    .letterhead-page.editing .lh-editable {
+      outline: 2px dashed rgba(0,123,138,0.25);
+      outline-offset: 2px;
+    }
+
+    /* ===== FOOTER ===== */
+    .lh-footer {
+      flex-shrink: 0;
+      pointer-events: none;
+      user-select: none;
+      position: relative;
+    }
+
+    .lh-footer-divider {
+      height: 2px;
+      background: linear-gradient(to right, #e8862a, #007b8a);
+      margin: 0 32px;
+    }
+
+    .lh-footer-body {
+      padding: 14px 32px 10px 32px;
+      position: relative;
+    }
+
+    .lh-footer-company {
+      font-size: 15px;
+      font-weight: 700;
+      color: #007b8a;
+      margin-bottom: 8px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .lh-footer-details {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .lh-footer-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 11px;
+      color: #333;
+      font-family: 'Inter', sans-serif;
+      line-height: 1.5;
+    }
+
+    .lh-footer-icon {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      margin-top: 1px;
+    }
+
+    .icon-phone  { background: #e8862a; color: #fff; }
+    .icon-email  { background: #007b8a; color: #fff; }
+    .icon-web    { background: #007b8a; color: #fff; }
+    .icon-addr   { background: #555;    color: #fff; }
+
+    /* Decorative corner triangle */
+    .lh-footer-corner {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 100px;
+      height: 80px;
+      overflow: hidden;
+    }
+
+    .lh-footer-corner::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 0;
+      height: 0;
+      border-left: 100px solid transparent;
+      border-bottom: 80px solid #007b8a;
+    }
+
+    .lh-footer-corner::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 0;
+      height: 0;
+      border-left: 60px solid transparent;
+      border-bottom: 50px solid #009baa;
+    }
+
+    /* ===== STATUS BAR ===== */
+    .status-bar {
+      align-self: stretch;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: var(--bg-panel);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      color: #8892b0;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #4caf50;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ===== TEMPLATE MODAL ===== */
+    .template-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 2100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      backdrop-filter: blur(4px);
+    }
+    .template-overlay.visible { opacity: 1; pointer-events: all; }
+
+    .template-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -48%) scale(0.96);
+      width: min(860px, 94vw);
+      max-height: 85vh;
+      overflow-y: auto;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      z-index: 2200;
+      padding: 28px 28px 24px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,123,138,0.2);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    .template-modal.open {
+      opacity: 1;
+      pointer-events: all;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .template-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .template-modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .template-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .template-card {
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #0f0f23;
+    }
+    .template-card:hover {
+      border-color: var(--teal-light);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0,123,138,0.3);
+    }
+    .template-card.active-template {
+      border-color: var(--teal-light);
+      box-shadow: 0 0 0 3px rgba(0,155,170,0.3);
+    }
+
+    .template-preview {
+      width: 100%;
+      height: 130px;
+      overflow: hidden;
+      position: relative;
+    }
+    .template-preview iframe {
+      width: 794px;
+      height: 1123px;
+      border: none;
+      transform-origin: top left;
+      pointer-events: none;
+    }
+
+    .template-card-footer {
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .template-card-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #e8eaf6;
+    }
+    .template-card-badge {
+      font-size: 10px;
+      background: rgba(0,123,138,0.2);
+      color: var(--teal-light);
+      border: 1px solid rgba(0,123,138,0.3);
+      border-radius: 4px;
+      padding: 2px 6px;
+    }
+    .template-card.active-template .template-card-badge {
+      background: var(--teal);
+      color: #fff;
+    }
+
+    /* ===== UPLOAD TEMPLATE ZONE ===== */
+    .upload-template-section {
+      background: rgba(0,123,138,0.06);
+      border: 1px solid rgba(0,123,138,0.2);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .upload-template-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--teal-light);
+      margin-bottom: 4px;
+    }
+    .upload-tpl-zone {
+      flex: 1;
+      min-width: 120px;
+      border: 2px dashed rgba(0,123,138,0.35);
+      border-radius: 10px;
+      padding: 14px 10px;
+      text-align: center;
+      cursor: pointer;
+      color: #8892b0;
+      transition: all 0.2s;
+      background: rgba(0,0,0,0.2);
+    }
+    .upload-tpl-zone:hover {
+      border-color: var(--teal-light);
+      background: rgba(0,123,138,0.1);
+      color: var(--teal-light);
+      transform: translateY(-2px);
+    }
+
+    /* ===== ADMIN PANEL ===== */
+    .admin-panel {
+      position: fixed;
+      top: 0;
+      right: -400px;
+      width: 380px;
+      height: 100vh;
+      background: var(--bg-panel);
+      border-left: 1px solid var(--border);
+      z-index: 2000;
+      transition: right 0.35s cubic-bezier(0.4,0,0.2,1);
+      overflow-y: auto;
+      padding: 24px 20px;
+      box-shadow: -8px 0 40px rgba(0,0,0,0.5);
+    }
+
+    .admin-panel.open { right: 0; }
+
+    .admin-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .admin-overlay.visible { opacity: 1; pointer-events: all; }
+
+    .admin-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .admin-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .close-btn {
+      width: 32px; height: 32px;
+      background: rgba(255,255,255,0.07);
+      border: none;
+      border-radius: 8px;
+      color: #aaa;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .close-btn:hover { background: rgba(255,0,0,0.15); color: #ff6b6b; }
+
+    .admin-section {
+      margin-bottom: 24px;
+    }
+
+    .admin-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--teal-light);
+      margin-bottom: 12px;
+    }
+
+    .admin-field { margin-bottom: 14px; }
+    .admin-field label {
+      display: block;
+      font-size: 12px;
+      color: #8892b0;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .admin-field input, .admin-field select {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: #e8eaf6;
+      font-size: 13px;
+      padding: 9px 12px;
+      outline: none;
+      font-family: var(--font-main);
+      transition: border-color 0.2s;
+    }
+    .admin-field input:focus, .admin-field select:focus {
+      border-color: var(--teal-light);
+    }
+
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #8892b0;
+      font-size: 13px;
+    }
+    .upload-zone:hover {
+      border-color: var(--teal-light);
+      background: rgba(0,123,138,0.05);
+      color: var(--teal-light);
+    }
+    .upload-zone input { display: none; }
+    .upload-icon { font-size: 28px; margin-bottom: 8px; }
+
+    /* ===== TOAST ===== */
+    .toast-container {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 13px;
+      color: #e8eaf6;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 240px;
+      animation: slideUp 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
+    }
+
+    .toast.success { border-left: 4px solid #4caf50; }
+    .toast.error   { border-left: 4px solid #f44336; }
+    .toast.info    { border-left: 4px solid var(--teal-light); }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes fadeOut {
+      to { opacity: 0; transform: translateY(-10px); pointer-events: none; }
+    }
+
+    /* ===== LOADING OVERLAY ===== */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 9998;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .loading-overlay.show { opacity: 1; pointer-events: all; }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(0,123,138,0.2);
+      border-top-color: var(--teal-light);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 14px; color: #e8eaf6; font-weight: 500; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
+      .app-layout {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        flex-direction: row;
+        flex-wrap: wrap;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 12px;
+      }
+      .sidebar-section {
+        flex: 1;
+        min-width: 200px;
+      }
+      .editor-area {
+        padding: 16px;
+      }
+      .letterhead-page {
+        width: 100%;
+        min-height: auto;
+      }
+      .lh-editable {
+        min-height: 400px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .nav-actions .btn-secondary { display: none; }
+      .app-nav { padding: 0 16px; }
+      .lh-header { padding: 16px 20px 0 20px; }
+      .lh-iec-block { font-size: 9px; }
+      .lh-footer-body { padding: 12px 20px 8px 20px; }
+    }
+
+    /* ===== PRINT / EXPORT STYLES ===== */
+    @media print {
+      body { background: #fff; }
+      .app-nav, .sidebar, .admin-panel, .status-bar, .page-controls { display: none !important; }
+      .editor-area { padding: 0; background: #fff; }
+      .letterhead-page { box-shadow: none; width: 100%; }
+      .lh-editable:focus { outline: none; }
+    }
+
+    /* ===== WORD COUNT ===== */
+    .word-count-badge {
+      background: rgba(0,123,138,0.2);
+      color: var(--teal-light);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* Highlight editable area on hover */
+    .lh-content-wrap:hover .lh-editable:not(:focus) {
+      background: rgba(0,123,138,0.018);
+    }
+
+    /* Divider label */
+    .edit-zone-label {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      font-size: 9px;
+      color: rgba(0,123,138,0.4);
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      pointer-events: none;
+      z-index: 2;
+      user-select: none;
+    }
+
+    /* ===== FONT SELECT ICON ===== */
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: '▾';
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: #8892b0;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== TOP NAV ===== -->
+<nav class="app-nav">
+  <div class="nav-brand">
+    <div class="nav-brand-icon">✉</div>
+    <div class="nav-brand-text">
+      <h1>Letterhead Editor</h1>
+      <span>Vansora Agro Pvt. Ltd.</span>
+    </div>
+  </div>
+  <div class="nav-actions">
+    <button class="btn btn-ghost" id="templateBtn" onclick="openTemplateModal()" title="Change Template">🗂 Templates</button>
+    <button class="btn btn-ghost" id="printBtn" title="Print">🖨 Print</button>
+    <button class="btn btn-secondary" id="exportPngBtn">🖼 Export PNG</button>
+    <button class="btn btn-orange" id="exportPdfBtn">📄 Export PDF</button>
+    <button class="btn btn-ghost" id="adminBtn" title="Admin Settings">⚙ Admin</button>
+  </div>
+</nav>
+
+<!-- ===== MAIN LAYOUT ===== -->
+<div class="app-layout">
+
+  <!-- ===== LEFT SIDEBAR (TOOLBAR) ===== -->
+  <aside class="sidebar">
+
+    <!-- Font -->
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">🔤 Typography</div>
+      <div class="tool-group">
+        <div>
+          <div class="tool-label">Font Family</div>
+          <div class="select-wrap">
+            <select class="tool-select" id="fontFamily" onchange="applyFormat('fontName', this.value)">
+              <option value="Times New Roman">Times New Roman</option>
+              <option value="Arial">Arial</option>
+              <option value="Calibri">Calibri</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Verdana">Verdana</option>
+              <option value="Courier New">Courier New</option>
+              <option value="Trebuchet MS">Trebuchet MS</option>
+              <option value="Garamond">Garamond</option>
+              <option value="Inter">Inter</option>
+              <option value="Palatino">Palatino</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <div class="tool-label">Font Size</div>
+          <div class="select-wrap">
+            <select class="tool-select" id="fontSize" onchange="applyFormat('fontSize', this.value)">
+              <option value="1">8pt</option>
+              <option value="2">10pt</option>
+              <option value="3" selected>12pt</option>
+              <option value="4">14pt</option>
+              <option value="5">18pt</option>
+              <option value="6">24pt</option>
+              <option value="7">36pt</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <div class="tool-label">Line Spacing</div>
+          <div class="slider-wrap">
+            <input type="range" id="lineSpacing" min="1" max="3" step="0.1" value="1.8"
+                   oninput="changeLineSpacing(this.value)" />
+            <span class="slider-val" id="lineSpacingVal">1.8</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formatting -->
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">✏️ Formatting</div>
+      <div class="tool-group">
+        <div class="tool-row">
+          <button class="tool-btn" id="boldBtn" onclick="toggleFormat('bold')" title="Bold (Ctrl+B)"><b>B</b></button>
+          <button class="tool-btn" id="italicBtn" onclick="toggleFormat('italic')" title="Italic (Ctrl+I)"><i>I</i></button>
+          <button class="tool-btn" id="underlineBtn" onclick="toggleFormat('underline')" title="Underline (Ctrl+U)"><u>U</u></button>
+          <button class="tool-btn" id="strikeBtn" onclick="toggleFormat('strikeThrough')" title="Strikethrough"><s>S</s></button>
+        </div>
+        <div class="tool-row">
+          <button class="tool-btn" onclick="applyFormat('justifyLeft')"   title="Align Left">⬅</button>
+          <button class="tool-btn" onclick="applyFormat('justifyCenter')" title="Center">↔</button>
+          <button class="tool-btn" onclick="applyFormat('justifyRight')"  title="Align Right">➡</button>
+          <button class="tool-btn" onclick="applyFormat('justifyFull')"   title="Justify">☰</button>
+        </div>
+        <div class="tool-row">
+          <button class="tool-btn" onclick="applyFormat('insertUnorderedList')" title="Bullet List">• List</button>
+          <button class="tool-btn" onclick="applyFormat('insertOrderedList')"   title="Numbered List">1. List</button>
+        </div>
+        <div class="tool-row">
+          <button class="tool-btn" onclick="applyFormat('indent')"  title="Indent">→ In</button>
+          <button class="tool-btn" onclick="applyFormat('outdent')" title="Outdent">← Out</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Color -->
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">🎨 Text Color</div>
+      <div class="tool-group">
+        <div class="color-row">
+          <div class="color-picker-wrap" title="Pick custom color">
+            <input type="color" id="textColorPicker" value="#1a1a1a" oninput="applyFormat('foreColor', this.value)" />
+          </div>
+          <div class="color-presets">
+            <div class="color-swatch" style="background:#1a1a1a" onclick="setColor('#1a1a1a')" title="Black"></div>
+            <div class="color-swatch" style="background:#007b8a" onclick="setColor('#007b8a')" title="Teal"></div>
+            <div class="color-swatch" style="background:#e8862a" onclick="setColor('#e8862a')" title="Orange"></div>
+            <div class="color-swatch" style="background:#c0392b" onclick="setColor('#c0392b')" title="Red"></div>
+            <div class="color-swatch" style="background:#2980b9" onclick="setColor('#2980b9')" title="Blue"></div>
+            <div class="color-swatch" style="background:#27ae60" onclick="setColor('#27ae60')" title="Green"></div>
+            <div class="color-swatch" style="background:#8e44ad" onclick="setColor('#8e44ad')" title="Purple"></div>
+            <div class="color-swatch" style="background:#7f8c8d" onclick="setColor('#7f8c8d')" title="Gray"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Highlight -->
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">🖌 Highlight Color</div>
+      <div class="tool-group">
+        <div class="color-row">
+          <div class="color-picker-wrap" title="Pick highlight color">
+            <input type="color" id="highlightPicker" value="#ffff00" oninput="applyFormat('hiliteColor', this.value)" />
+          </div>
+          <div class="color-presets">
+            <div class="color-swatch" style="background:#ffff00" onclick="applyFormat('hiliteColor','#ffff00')" title="Yellow"></div>
+            <div class="color-swatch" style="background:#b3f0ff" onclick="applyFormat('hiliteColor','#b3f0ff')" title="Blue"></div>
+            <div class="color-swatch" style="background:#b3ffcc" onclick="applyFormat('hiliteColor','#b3ffcc')" title="Green"></div>
+            <div class="color-swatch" style="background:#ffccb3" onclick="applyFormat('hiliteColor','#ffccb3')" title="Orange"></div>
+            <div class="color-swatch" style="background:transparent;border:2px solid #555" onclick="applyFormat('hiliteColor','transparent')" title="No highlight">✕</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">⚡ Actions</div>
+      <div class="tool-group">
+        <button class="btn btn-secondary" style="width:100%;justify-content:center;" onclick="clearContent()">🗑 Clear Content</button>
+        <button class="btn btn-secondary" style="width:100%;justify-content:center;" onclick="applyFormat('removeFormat')">↺ Remove Formatting</button>
+        <button class="btn btn-secondary" style="width:100%;justify-content:center;" onclick="insertDate()">📅 Insert Today's Date</button>
+        <button class="btn btn-secondary" style="width:100%;justify-content:center;" onclick="insertPageBreakMarker()">— Page Break</button>
+      </div>
+    </div>
+
+    <!-- Stamp / Mohar -->
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">🔖 Stamp / Mohar</div>
+      <div class="tool-group">
+        <div class="tool-label">Upload stamp image (PNG recommended)</div>
+        <div class="stamp-upload-zone" onclick="document.getElementById('stampFileInput').click()" title="Upload Stamp">
+          <input type="file" id="stampFileInput" accept="image/*" style="display:none" onchange="insertStamp(event)" />
+          <div style="font-size:28px;">🔖</div>
+          <div style="font-size:12px;margin-top:4px;">Click to upload stamp</div>
+          <div style="font-size:10px;color:#8892b0;margin-top:2px;">PNG with transparent background works best</div>
+        </div>
+        <div class="tool-label" style="margin-top:4px;">Stamp Size</div>
+        <div class="slider-wrap">
+          <input type="range" id="stampSizeSlider" min="60" max="300" value="120"
+            oninput="document.getElementById('stampSizeVal').textContent=this.value+'px'" />
+          <span class="slider-val" id="stampSizeVal">120px</span>
+        </div>
+        <div class="tool-label">Stamp Opacity</div>
+        <div class="slider-wrap">
+          <input type="range" id="stampOpacitySlider" min="20" max="100" value="80"
+            oninput="document.getElementById('stampOpacityVal').textContent=this.value+'%'" />
+          <span class="slider-val" id="stampOpacityVal">80%</span>
+        </div>
+        <div class="tool-label">Stamp Rotation</div>
+        <div class="slider-wrap">
+          <input type="range" id="stampRotSlider" min="-45" max="45" value="-15"
+            oninput="document.getElementById('stampRotVal').textContent=this.value+'°'; updateSelectedStamp()" />
+          <span class="slider-val" id="stampRotVal">-15°</span>
+        </div>
+        <button class="btn btn-secondary" style="width:100%;justify-content:center;margin-top:4px;" onclick="removeSelectedStamp()">🗑 Remove Stamp</button>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ===== EDITOR AREA ===== -->
+  <main class="editor-area" id="editorArea">
+
+    <div class="status-bar">
+      <div class="status-indicator">
+        <div class="status-dot"></div>
+        <span>Ready to edit — click inside the document to start typing</span>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <span class="word-count-badge" id="wordCount">0 words</span>
+        <span style="font-size:11px;">A4 Format</span>
+      </div>
+    </div>
+
+    <!-- ===== LETTERHEAD PAGE ===== -->
+    <div id="documentContainer">
+      <div class="letterhead-page" id="letterheadPage">
+        <button class="page-delete-btn" onclick="deletePage(this)" title="Delete Page">🗑 Delete</button>
+
+      <!-- HEADER (FIXED) -->
+      <div class="lh-header" id="lhHeader" style="padding: 30px 40px 0 40px;">
+        <div class="lh-header-top" style="display: flex; align-items: stretch; margin-bottom: 8px;">
+          <!-- Logo -->
+          <div class="lh-logo-block" style="flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-right: 20px;">
+            <svg class="lh-logo-img" viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg" style="width: 85px; height: auto;">
+              <!-- Green leaves -->
+              <path d="M100 15 C 90 0, 70 10, 80 25 C 90 20, 95 15, 100 15 Z" fill="#82b93c" />
+              <path d="M100 15 C 110 0, 130 10, 120 25 C 110 20, 105 15, 100 15 Z" fill="#82b93c" />
+              <!-- Purple Onion -->
+              <path d="M100 15 C 100 15, 110 35, 130 50 C 160 70, 190 100, 190 150 C 190 200, 140 225, 100 225 C 60 225, 10 200, 10 150 C 10 100, 40 70, 70 50 C 90 35, 100 15, 100 15 Z" fill="#b21f66" />
+              <!-- Negative space ship -->
+              <polygon points="100,70 120,95 80,95" fill="#ffffff"/>
+              <polygon points="100,90 135,120 120,128 100,110 80,128 65,120" fill="#ffffff"/>
+              <polygon points="100,120 150,155 135,165 100,140 65,165 50,155" fill="#ffffff"/>
+              <polygon points="35,170 165,170 135,225 65,225" fill="#ffffff"/>
+            </svg>
+            <div style="text-align: center; margin-top: 5px;">
+              <div style="font-family: Arial, sans-serif; font-size: 15px; font-weight: 800; color: #82b93c;">Onish <span style="color: #b21f66;">Agro</span></div>
+              <div style="font-family: Arial, sans-serif; font-size: 8px; font-weight: 700; color: #b21f66; letter-spacing: 1px; margin-top: 1px;">EXPORTS</div>
+              <div style="font-family: Arial, sans-serif; font-size: 5px; font-weight: 600; color: #333; letter-spacing: 0.5px; margin-top: 1px;">IMPORTS | EXPORTS | DISTRIBUTION</div>
+            </div>
+          </div>
+          
+          <div style="width: 1px; background-color: #e0b0c0; margin-right: 25px; margin-top: 10px; margin-bottom: 10px;"></div>
+          
+          <!-- Company Details -->
+          <div class="lh-details-block" style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 6px;">
+            <div style="font-size: 20px; font-weight: 800; color: #b21f66; font-family: 'Inter', sans-serif; letter-spacing: 0px;">ONISH AGRO EXPORTS</div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: #111; font-weight: 600; font-family: 'Inter', sans-serif;">
+              <span style="display: inline-flex; justify-content: center; align-items: center; width: 14px; height: 14px; background: #82b93c; color: white; border-radius: 50%; font-size: 9px;">📞</span>
+              +91 9011340007
+            </div>
+            <div style="display: flex; align-items: center; gap: 18px; font-size: 11px; color: #111; font-weight: 600; font-family: 'Inter', sans-serif;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="display: inline-flex; justify-content: center; align-items: center; width: 14px; height: 14px; background: #82b93c; color: white; border-radius: 50%; font-size: 9px;">🌐</span>
+                www.onishagroexports.com
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="display: inline-flex; justify-content: center; align-items: center; width: 14px; height: 14px; background: #b21f66; color: white; border-radius: 50%; font-size: 9px;">✉</span>
+                onishagroexports@gmail.com
+              </div>
+            </div>
+            <div style="display: flex; align-items: flex-start; gap: 8px; font-size: 11px; color: #111; font-weight: 600; font-family: 'Inter', sans-serif; line-height: 1.4;">
+              <span style="display: inline-flex; justify-content: center; align-items: center; width: 14px; height: 14px; background: #82b93c; color: white; border-radius: 50%; font-size: 9px; flex-shrink: 0; margin-top: 1px;">📍</span>
+              <span>Shri ramchandra bungalow plot no. A10 street no.4 serene meadows,<br>Gangapur rd anandwali, Nashik - 422013</span>
+            </div>
+          </div>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 3px;">
+          <div style="height: 1.5px; background-color: #b21f66; width: 100%;"></div>
+          <div style="height: 1.5px; background-color: #82b93c; width: 100%;"></div>
+        </div>
+      </div>
+
+      <!-- EDITABLE CONTENT AREA -->
+      <div class="lh-content-wrap">
+
+        <!-- Watermark -->
+        <div class="lh-watermark" aria-hidden="true" style="opacity: 0.04; display: flex; justify-content: center; align-items: center; margin-top: 40px;">
+          <svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg" style="width: 450px; height: 450px;">
+            <path d="M100 15 C 90 0, 70 10, 80 25 C 90 20, 95 15, 100 15 Z" fill="#000000" />
+            <path d="M100 15 C 110 0, 130 10, 120 25 C 110 20, 105 15, 100 15 Z" fill="#000000" />
+            <path d="M100 15 C 100 15, 110 35, 130 50 C 160 70, 190 100, 190 150 C 190 200, 140 225, 100 225 C 60 225, 10 200, 10 150 C 10 100, 40 70, 70 50 C 90 35, 100 15, 100 15 Z" fill="#000000" />
+            <polygon points="100,70 120,95 80,95" fill="#ffffff"/>
+            <polygon points="100,90 135,120 120,128 100,110 80,128 65,120" fill="#ffffff"/>
+            <polygon points="100,120 150,155 135,165 100,140 65,165 50,155" fill="#ffffff"/>
+            <polygon points="35,170 165,170 135,225 65,225" fill="#ffffff"/>
+          </svg>
+        </div>
+
+        <!-- THE EDITABLE DIV -->
+        <div
+          class="lh-editable"
+          id="editableContent"
+          contenteditable="true"
+          spellcheck="true"
+          aria-label="Letter content — editable area"
+          role="textbox"
+          aria-multiline="true"
+        ></div>
+      </div>
+
+      <!-- FOOTER (FIXED) -->
+      <div class="lh-footer" id="lhFooter" style="flex-shrink: 0; position: relative;">
+        <div style="text-align: center; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700; color: #333; padding-bottom: 16px;">
+          IEC CODE: AWVPP4470E &nbsp;|&nbsp; GST NO.: 27AWVPP4470E1Z0
+        </div>
+        <div style="position: relative; height: 35px; width: 100%; background: #b21f66;">
+          <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 85%; background: #82b93c; clip-path: polygon(0 0, 100% 0, 96% 100%, 0 100%);"></div>
+        </div>
+      </div>
+
+    </div><!-- end .letterhead-page -->
+    </div><!-- end #documentContainer -->
+    
+    <div style="margin-top:20px; margin-bottom: 40px; display: flex; justify-content: center;">
+      <button class="btn btn-primary" onclick="addNewPage()" style="padding: 12px 24px; font-size: 14px;">➕ Add New Page</button>
+    </div>
+
+  </main>
+</div><!-- end .app-layout -->
+
+<!-- ===== TEMPLATE MODAL ===== -->
+<div class="template-overlay" id="templateOverlay" onclick="closeTemplateModal()"></div>
+<div class="template-modal" id="templateModal">
+  <div class="template-modal-header">
+    <div class="template-modal-title">🗂 Choose / Upload Template</div>
+    <button class="close-btn" onclick="closeTemplateModal()">✕</button>
+  </div>
+
+  <!-- Upload Section -->
+  <div class="upload-template-section">
+    <div class="upload-template-title">📤 Upload Apna Letterhead</div>
+    <p style="color:#8892b0;font-size:11px;margin:4px 0 10px;">Apni company ki letterhead image (PNG/JPG) upload karein — wo poore page ka background banega, upar aap text type kar sakte hain.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <!-- Full page background upload -->
+      <div class="upload-tpl-zone" onclick="document.getElementById('tplBgInput').click()" title="Full page background">
+        <input type="file" id="tplBgInput" accept="image/*" style="display:none" onchange="applyUploadedTemplate(event,'background')" />
+        <div style="font-size:22px;">🖼</div>
+        <div style="font-size:12px;font-weight:600;margin-top:4px;">Full Page Background</div>
+        <div style="font-size:10px;color:#8892b0;margin-top:2px;">Poora letterhead image<br>(A4 size PNG/JPG best)</div>
+      </div>
+      <!-- Header only upload -->
+      <div class="upload-tpl-zone" onclick="document.getElementById('tplHeaderInput').click()" title="Header image only">
+        <input type="file" id="tplHeaderInput" accept="image/*" style="display:none" onchange="applyUploadedTemplate(event,'header')" />
+        <div style="font-size:22px;">📋</div>
+        <div style="font-size:12px;font-weight:600;margin-top:4px;">Header Image Only</div>
+        <div style="font-size:10px;color:#8892b0;margin-top:2px;">Sirf header ka image<br>(footer same rahega)</div>
+      </div>
+      <!-- Footer only upload -->
+      <div class="upload-tpl-zone" onclick="document.getElementById('tplFooterInput').click()" title="Footer image only">
+        <input type="file" id="tplFooterInput" accept="image/*" style="display:none" onchange="applyUploadedTemplate(event,'footer')" />
+        <div style="font-size:22px;">📄</div>
+        <div style="font-size:12px;font-weight:600;margin-top:4px;">Footer Image Only</div>
+        <div style="font-size:10px;color:#8892b0;margin-top:2px;">Sirf footer ka image<br>(header same rahega)</div>
+      </div>
+    </div>
+    <!-- Background position controls (shown after BG upload) -->
+    <div id="bgControls" style="display:none;margin-top:12px;padding:10px;background:rgba(0,123,138,0.08);border-radius:8px;border:1px solid rgba(0,123,138,0.2);">
+      <div style="font-size:11px;color:#e8eaf6;font-weight:600;margin-bottom:6px;">Background Image Controls</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+        <label style="font-size:11px;color:#8892b0;">Opacity:
+          <input type="range" id="bgOpacitySlider" min="10" max="100" value="100" style="width:80px;vertical-align:middle;" oninput="updateBgStyle()" />
+          <span id="bgOpacityVal">100%</span>
+        </label>
+        <label style="font-size:11px;color:#8892b0;">Fit:
+          <select id="bgSizeSelect" style="background:#1a2744;color:#e8eaf6;border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:2px 6px;font-size:11px;" onchange="updateBgStyle()">
+            <option value="cover">Cover (fill)</option>
+            <option value="contain">Contain (fit)</option>
+            <option value="100% 100%">Stretch</option>
+          </select>
+        </label>
+        <button onclick="removeBgTemplate()" style="background:rgba(255,0,0,0.15);color:#ff6b6b;border:1px solid rgba(255,0,0,0.2);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">🗑 Remove Background</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:1px;background:rgba(255,255,255,0.08);margin:16px 0;"></div>
+  <p style="color:#8892b0;font-size:12px;margin:0 0 14px 0;">Ya built-in templates mein se choose karein:</p>
+  <div class="template-grid" id="templateGrid">
+    <!-- Cards injected by JS -->
+  </div>
+</div>
+
+<!-- ===== ADMIN PANEL ===== -->
+<div class="admin-overlay" id="adminOverlay" onclick="closeAdmin()"></div>
+<div class="admin-panel" id="adminPanel">
+  <div class="admin-header">
+    <div class="admin-title">⚙ Admin Settings</div>
+    <button class="close-btn" onclick="closeAdmin()">✕</button>
+  </div>
+
+  <div class="admin-section">
+    <div class="admin-section-title">Template Settings</div>
+    <div class="admin-field">
+      <label>Company Name</label>
+      <input type="text" id="adminCompanyName" value="Vansora Agro Pvt. Ltd." oninput="updateTemplate()" />
+    </div>
+    <div class="admin-field">
+      <label>IEC Number</label>
+      <input type="text" id="adminIEC" value="AALCV8693A" oninput="updateTemplate()" />
+    </div>
+    <div class="admin-field">
+      <label>GSTIN</label>
+      <input type="text" id="adminGSTIN" value="08AALCV8693A1ZV" oninput="updateTemplate()" />
+    </div>
+    <div class="admin-field">
+      <label>LIC Number</label>
+      <input type="text" id="adminLIC" value="U46301RJ2026PTC111359" oninput="updateTemplate()" />
+    </div>
+    <div class="admin-field">
+      <label>Phone Numbers</label>
+      <input type="text" id="adminPhone" value="+91 9624790633, +91 76655 77967, +91 77268 58797" oninput="updateTemplate()" />
+    </div>
+    <div class="admin-field">
+      <label>Email</label>
+      <input type="text" id="adminEmail" value="Info.vansoraagro@gmail.com" oninput="updateTemplate()" />
+    </div>
+    <div class="admin-field">
+      <label>Website</label>
+      <input type="text" id="adminWebsite" value="www.vansoraagropvtltd.com" oninput="updateTemplate()" />
+    </div>
+    <div class="admin-field">
+      <label>Address</label>
+      <input type="text" id="adminAddress" value="House No. 4, Ward No. 13, Vikash Nagar, Chodhani, Chomu, Jaipur (Rajasthan)-303702" oninput="updateTemplate()" />
+    </div>
+  </div>
+
+  <div class="admin-section">
+    <div class="admin-section-title">Page Settings</div>
+    <div class="admin-field">
+      <label>Default Font</label>
+      <select id="adminFont" oninput="updateDefaultFont()">
+        <option value="Times New Roman" selected>Times New Roman</option>
+        <option value="Arial">Arial</option>
+        <option value="Calibri">Calibri</option>
+        <option value="Georgia">Georgia</option>
+      </select>
+    </div>
+    <div class="admin-field">
+      <label>Min Content Height (px)</label>
+      <input type="number" id="adminMinHeight" value="700" oninput="updateContentHeight()" />
+    </div>
+  </div>
+
+  <div class="admin-section">
+    <div class="admin-section-title">Logo Upload</div>
+    <div class="upload-zone" onclick="document.getElementById('logoUpload').click()">
+      <input type="file" id="logoUpload" accept="image/*" onchange="handleLogoUpload(event)" />
+      <div class="upload-icon">🏢</div>
+      <div>Click to upload custom logo</div>
+      <div style="font-size:11px;margin-top:4px;color:#666;">PNG, SVG, JPG accepted</div>
+    </div>
+  </div>
+
+  <div style="margin-top: 16px;">
+    <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="saveAdminSettings()">
+      💾 Save Settings
+    </button>
+  </div>
+</div>
+
+<!-- ===== LOADING OVERLAY ===== -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Generating PDF…</div>
+</div>
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+  // =========================================================
+  // STATE
+  // =========================================================
+  let activeEditable = document.getElementById('editableContent');
+  let savedSelection = null;
+  let isSplitting    = false;
+
+  // =========================================================
+  // STEP 1: Calculate & lock editable area height in pixels
+  // This is the ONLY reliable way to prevent overflow in flex layouts
+  // =========================================================
+  function recalcEditableHeights() {
+    document.querySelectorAll('.letterhead-page').forEach(page => {
+      const header = page.querySelector('.lh-header');
+      const footer = page.querySelector('.lh-footer');
+      const edit   = page.querySelector('.lh-editable');
+      if (!header || !footer || !edit) return;
+
+      const pageH   = 1123; // A4 fixed height px
+      const headerH = header.offsetHeight;
+      const footerH = footer.offsetHeight;
+      const available = pageH - headerH - footerH - 2; // 2px safety margin
+
+      edit.style.height    = available + 'px';
+      edit.style.maxHeight = available + 'px';
+      edit.style.minHeight = available + 'px';
+    });
+  }
+
+  // Run after fonts/layout settle
+  window.addEventListener('load', () => setTimeout(recalcEditableHeights, 200));
+
+  // =========================================================
+  // AUTO-SPLIT ENGINE
+  // =========================================================
+  function createPageAfter(afterPage) {
+    const container = document.getElementById('documentContainer');
+    const template  = container.querySelector('.letterhead-page');
+    const newPage   = template.cloneNode(true);
+    const newEdit   = newPage.querySelector('.lh-editable');
+    newEdit.innerHTML = '';
+    afterPage.insertAdjacentElement('afterend', newPage);
+    // Recalc heights on the new page
+    setTimeout(recalcEditableHeights, 50);
+    return newEdit;
+  }
+
+  function isOverflowing(editDiv) {
+    return editDiv.scrollHeight > editDiv.clientHeight + 2;
+  }
+
+  function autoSplit(editDiv) {
+    if (isSplitting) return;
+    if (!isOverflowing(editDiv)) return;
+
+    isSplitting = true;
+    try {
+      const currentPage = editDiv.closest('.letterhead-page');
+      let nextPage = currentPage.nextElementSibling;
+      if (!nextPage || !nextPage.classList.contains('letterhead-page')) nextPage = null;
+      let nextEdit = nextPage ? nextPage.querySelector('.lh-editable') : null;
+
+      const nodesToMove = [];
+      while (isOverflowing(editDiv) && editDiv.childNodes.length > 0) {
+        const last = editDiv.lastChild;
+        nodesToMove.unshift(last.cloneNode(true));
+        editDiv.removeChild(last);
+      }
+
+      if (nodesToMove.length === 0) { isSplitting = false; return; }
+
+      if (!nextEdit) nextEdit = createPageAfter(currentPage);
+
+      const frag = document.createDocumentFragment();
+      nodesToMove.forEach(n => frag.appendChild(n));
+      if (nextEdit.firstChild) {
+        nextEdit.insertBefore(frag, nextEdit.firstChild);
+      } else {
+        nextEdit.appendChild(frag);
+      }
+
+      isSplitting = false;
+      setTimeout(() => autoSplit(nextEdit), 0);
+    } catch(err) {
+      isSplitting = false;
+    }
+  }
+
+  function autoMerge(editDiv) {
+    if (isSplitting) return;
+    const currentPage = editDiv.closest('.letterhead-page');
+    const nextPage = currentPage.nextElementSibling;
+    if (!nextPage || !nextPage.classList.contains('letterhead-page')) return;
+    const nextEdit = nextPage.querySelector('.lh-editable');
+    if (!nextEdit || !nextEdit.firstChild) return;
+
+    isSplitting = true;
+    while (nextEdit.firstChild) {
+      const node = nextEdit.firstChild;
+      editDiv.appendChild(node.cloneNode(true));
+      if (isOverflowing(editDiv)) {
+        editDiv.removeChild(editDiv.lastChild);
+        break;
+      }
+      nextEdit.removeChild(nextEdit.firstChild);
+    }
+    if (!nextEdit.firstChild || nextEdit.innerText.trim() === '') {
+      const pages = document.querySelectorAll('.letterhead-page');
+      if (pages.length > 1) nextPage.remove();
+    }
+    isSplitting = false;
+    autoMerge(editDiv);
+  }
+
+  // =========================================================
+  // PASTE: Preserve Word formatting (bold, font, size, etc.)
+  // =========================================================
+  function cleanWordHTML(html) {
+    // Remove Word conditional comments
+    html = html.replace(/<!--\[if[\s\S]*?\[endif\]-->/gi, '');
+    // Remove <o:p> tags (Word empty paragraphs)
+    html = html.replace(/<o:p[^>]*>[\s\S]*?<\/o:p>/gi, '');
+    html = html.replace(/<o:p[^>]*\/>/gi, '');
+    // Remove Word namespace tags
+    html = html.replace(/<w:[^>]+>[\s\S]*?<\/w:[^>]+>/gi, '');
+    html = html.replace(/<m:[^>]+>[\s\S]*?<\/m:[^>]+>/gi, '');
+    // Remove script/style blocks
+    html = html.replace(/<style[\s\S]*?<\/style>/gi, '');
+    html = html.replace(/<script[\s\S]*?<\/script>/gi, '');
+    // Remove mso-* junk from inline styles but KEEP all visual properties
+    html = html.replace(/ style="([^"]*)"/gi, (match, styleStr) => {
+      const keep = [];
+      styleStr.split(';').forEach(rule => {
+        rule = rule.trim();
+        if (!rule) return;
+        const prop = rule.split(':')[0].trim().toLowerCase();
+        // Skip only mso-specific properties
+        if (prop.startsWith('mso-')) return;
+        // Keep all visual/layout properties EXCEPT margins/padding which cause huge gaps
+        if (
+          prop === 'font-weight'      ||
+          prop === 'font-style'       ||
+          prop === 'font-size'        ||
+          prop === 'font-family'      ||
+          prop === 'color'            ||
+          prop === 'background-color' ||
+          prop === 'text-decoration'  ||
+          prop === 'text-align'       ||
+          prop === 'text-indent'      ||
+          prop === 'margin-left'      ||
+          prop === 'margin-right'     ||
+          prop === 'padding-left'     ||
+          prop === 'padding-right'    ||
+          prop === 'line-height'      ||
+          prop === 'list-style-type'  ||
+          prop === 'vertical-align'
+        ) {
+          keep.push(rule);
+        }
+      });
+      return keep.length ? ` style="${keep.join('; ')}"` : '';
+    });
+    // Remove Word-specific class names
+    html = html.replace(/ class="Mso[^"]*"/gi, '');
+    html = html.replace(/ class="[^"]*"/gi, '');
+    // Remove lang attributes
+    html = html.replace(/ lang="[^"]*"/gi, '');
+    // Remove XML namespace attributes
+    html = html.replace(/ xmlns[^=]*="[^"]*"/gi, '');
+    // Extract body content
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    if (bodyMatch) html = bodyMatch[1];
+    
+    // Unwrap <div> tags (Word sometimes wraps the whole document in a div, causing it to split as a single block)
+    html = html.replace(/<div[^>]*>/gi, '');
+    html = html.replace(/<\/div>/gi, '');
+
+    // Clean up empty tags and excessive whitespace
+    // Including tags that just have &nbsp; or <br> to prevent huge empty gaps on paste
+    html = html.replace(/<p[^>]*>(?:\s|&nbsp;|<br\s*\/?>)*<\/p>/gi, '');
+    html = html.replace(/<span[^>]*>(?:\s|&nbsp;|<br\s*\/?>)*<\/span>/gi, '');
+    
+    return html.trim();
+  }
+
+  // =========================================================
+  // EVENT DELEGATION
+  // =========================================================
+  const docContainer = document.getElementById('documentContainer');
+
+  docContainer.addEventListener('focusin', (e) => {
+    if (e.target.classList.contains('lh-editable')) {
+      activeEditable = e.target;
+      e.target.closest('.letterhead-page').classList.add('editing');
+      updateToolbarState();
+    }
+  });
+
+  docContainer.addEventListener('focusout', (e) => {
+    if (e.target.classList.contains('lh-editable')) {
+      savedSelection = saveSelection();
+      e.target.closest('.letterhead-page').classList.remove('editing');
+    }
+  });
+
+  docContainer.addEventListener('keyup', (e) => {
+    if (!e.target.classList.contains('lh-editable')) return;
+    updateToolbarState();
+    if (e.key === 'Backspace' || e.key === 'Delete') {
+      setTimeout(() => autoMerge(e.target), 10);
+    } else {
+      setTimeout(() => autoSplit(e.target), 10);
+    }
+  });
+
+  docContainer.addEventListener('mouseup', (e) => {
+    if (e.target.classList.contains('lh-editable')) updateToolbarState();
+  });
+
+  // Paste handler — preserves Word formatting
+  docContainer.addEventListener('paste', (e) => {
+    if (!e.target.classList.contains('lh-editable')) return;
+    e.preventDefault();
+
+    const clip = e.clipboardData || e.originalEvent.clipboardData;
+    let html = clip.getData('text/html');
+
+    if (html && html.trim()) {
+      // HTML paste — clean Word junk but keep bold/font/etc.
+      html = cleanWordHTML(html);
+      document.execCommand('insertHTML', false, html);
+    } else {
+      // Fallback: plain text with line breaks preserved
+      let text = clip.getData('text/plain');
+      if (text) {
+        text = text.replace(/\r/g, '');
+        text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        text = text.replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
+        text = text.replace(/  /g, '&nbsp; ');
+        text = text.replace(/\n/g, '<br>');
+        document.execCommand('insertHTML', false, text);
+      }
+    }
+
+    updateToolbarState();
+    setTimeout(() => autoSplit(e.target), 100);
+  });
+
+  // =========================================================
+  // ADD / DELETE PAGE (manual buttons still available)
+  // =========================================================
+  function addNewPage() {
+    const container = document.getElementById('documentContainer');
+    const pages     = container.querySelectorAll('.letterhead-page');
+    const lastPage  = pages[pages.length - 1];
+    const newEdit   = createPageAfter(lastPage);
+    showToast('New page added', 'success');
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    newEdit.focus();
+  }
+
+  function deletePage(btn) {
+    const pages = document.querySelectorAll('.letterhead-page');
+    if (pages.length <= 1) {
+      showToast('Cannot delete the only page', 'error');
+      return;
+    }
+    if (confirm('Delete this page?')) {
+      btn.closest('.letterhead-page').remove();
+      showToast('Page deleted', 'info');
+      updateToolbarState();
+    }
+  }
+
+  // =========================================================
+  // SELECTION HELPERS
+  // =========================================================
+  function saveSelection() {
+    const sel = window.getSelection();
+    if (sel.rangeCount > 0) return sel.getRangeAt(0).cloneRange();
+    return null;
+  }
+
+  function restoreSelection() {
+    if (savedSelection) {
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(savedSelection);
+    }
+  }
+
+  function ensureFocus() {
+    if (activeEditable) activeEditable.focus();
+    if (savedSelection) restoreSelection();
+  }
+
+  // =========================================================
+  // FORMAT COMMANDS
+  // =========================================================
+  function applyFormat(cmd, value = null) {
+    ensureFocus();
+    document.execCommand(cmd, false, value);
+    updateToolbarState();
+  }
+
+  function toggleFormat(cmd) {
+    ensureFocus();
+    document.execCommand(cmd, false, null);
+    updateToolbarState();
+  }
+
+  function setColor(hex) {
+    document.getElementById('textColorPicker').value = hex;
+    applyFormat('foreColor', hex);
+  }
+
+  function changeLineSpacing(val) {
+    document.getElementById('lineSpacingVal').textContent = parseFloat(val).toFixed(1);
+    if (activeEditable) activeEditable.style.lineHeight = val;
+  }
+
+  // =========================================================
+  // TOOLBAR STATE (active buttons)
+  // =========================================================
+  function updateToolbarState() {
+    ['bold','italic','underline','strikeThrough'].forEach(cmd => {
+      const btn = document.getElementById(cmd.toLowerCase().replace('strikethrough','strike') + 'Btn');
+      // map correctly
+    });
+
+    const states = {
+      boldBtn:      'bold',
+      italicBtn:    'italic',
+      underlineBtn: 'underline',
+      strikeBtn:    'strikeThrough',
+    };
+    Object.entries(states).forEach(([btnId, cmd]) => {
+      const btn = document.getElementById(btnId);
+      if (btn) {
+        btn.classList.toggle('active', document.queryCommandState(cmd));
+      }
+    });
+
+    // Update word count across all pages
+    let totalText = '';
+    document.querySelectorAll('.lh-editable').forEach(ed => { totalText += ' ' + ed.innerText.trim(); });
+    const words = totalText.trim() === '' ? 0 : totalText.trim().split(/\s+/).filter(Boolean).length;
+    document.getElementById('wordCount').textContent = words + (words === 1 ? ' word' : ' words');
+  }
+
+  // =========================================================
+  // INSERT DATE
+  // =========================================================
+  function insertDate() {
+    const today = new Date();
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const dateStr = today.toLocaleDateString('en-IN', options);
+    applyFormat('insertText', dateStr);
+  }
+
+  // =========================================================
+  // INSERT PAGE BREAK MARKER
+  // =========================================================
+  function insertPageBreakMarker() {
+    ensureFocus();
+    document.execCommand('insertHTML', false,
+      '<hr style="border:none;border-top:2px dashed #ccc;margin:16px 0;" />'
+    );
+  }
+
+  // =========================================================
+  // STAMP / MOHAR SYSTEM
+  // =========================================================
+  let selectedStamp = null;
+
+  function insertStamp(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const size    = document.getElementById('stampSizeSlider').value;
+    const opacity = document.getElementById('stampOpacitySlider').value / 100;
+    const rot     = document.getElementById('stampRotSlider').value;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const src = e.target.result;
+
+      // Build a draggable stamp wrapper
+      const wrapper = document.createElement('span');
+      wrapper.className = 'stamp-img';
+      wrapper.contentEditable = 'false';
+      wrapper.style.cssText = `
+        display: inline-block;
+        position: relative;
+        cursor: move;
+        user-select: none;
+        vertical-align: bottom;
+        width: ${size}px;
+      `;
+
+      const img = document.createElement('img');
+      img.src = src;
+      img.style.cssText = `
+        width: ${size}px;
+        opacity: ${opacity};
+        transform: rotate(${rot}deg);
+        display: block;
+        pointer-events: none;
+      `;
+      img.draggable = false;
+
+      // Resize handle
+      const resizeHandle = document.createElement('span');
+      resizeHandle.className = 'stamp-resize';
+      resizeHandle.title = 'Drag to resize';
+
+      wrapper.appendChild(img);
+      wrapper.appendChild(resizeHandle);
+
+      // Click to select
+      wrapper.addEventListener('mousedown', (ev) => {
+        if (ev.target === resizeHandle) return; // handled separately
+        ev.stopPropagation();
+        selectStamp(wrapper);
+        startDrag(ev, wrapper);
+      });
+
+      // Resize drag
+      resizeHandle.addEventListener('mousedown', (ev) => {
+        ev.stopPropagation();
+        ev.preventDefault();
+        startResize(ev, wrapper, img);
+      });
+
+      // Insert at cursor or append to active editable
+      const target = activeEditable || document.querySelector('.lh-editable');
+      if (target) {
+        target.focus();
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0 && target.contains(sel.anchorNode)) {
+          const range = sel.getRangeAt(0);
+          range.deleteContents();
+          range.insertNode(wrapper);
+          range.setStartAfter(wrapper);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        } else {
+          target.appendChild(wrapper);
+        }
+        selectStamp(wrapper);
+        showToast('Stamp inserted! Drag to reposition.', 'success');
+      }
+    };
+    reader.readAsDataURL(file);
+    // Reset input so same file can be uploaded again
+    event.target.value = '';
+  }
+
+  function selectStamp(wrapper) {
+    // Deselect previous
+    document.querySelectorAll('.stamp-img.selected').forEach(s => s.classList.remove('selected'));
+    wrapper.classList.add('selected');
+    selectedStamp = wrapper;
+    // Sync sliders to this stamp's current values
+    const img = wrapper.querySelector('img');
+    if (img) {
+      const w = parseInt(img.style.width) || 120;
+      const op = Math.round((parseFloat(img.style.opacity) || 0.8) * 100);
+      const rotMatch = img.style.transform.match(/rotate\((-?\d+)deg\)/);
+      const rot = rotMatch ? parseInt(rotMatch[1]) : -15;
+      document.getElementById('stampSizeSlider').value = w;
+      document.getElementById('stampSizeVal').textContent = w + 'px';
+      document.getElementById('stampOpacitySlider').value = op;
+      document.getElementById('stampOpacityVal').textContent = op + '%';
+      document.getElementById('stampRotSlider').value = rot;
+      document.getElementById('stampRotVal').textContent = rot + '°';
+    }
+  }
+
+  function updateSelectedStamp() {
+    if (!selectedStamp) return;
+    const img = selectedStamp.querySelector('img');
+    if (!img) return;
+    const size    = document.getElementById('stampSizeSlider').value;
+    const opacity = document.getElementById('stampOpacitySlider').value / 100;
+    const rot     = document.getElementById('stampRotSlider').value;
+    img.style.width   = size + 'px';
+    img.style.opacity = opacity;
+    img.style.transform = `rotate(${rot}deg)`;
+    selectedStamp.style.width = size + 'px';
+  }
+
+  // Live update when size/opacity sliders change
+  document.getElementById('stampSizeSlider').addEventListener('input', updateSelectedStamp);
+  document.getElementById('stampOpacitySlider').addEventListener('input', updateSelectedStamp);
+
+  function removeSelectedStamp() {
+    if (selectedStamp) {
+      selectedStamp.remove();
+      selectedStamp = null;
+      showToast('Stamp removed', 'info');
+    } else {
+      showToast('No stamp selected. Click a stamp first.', 'error');
+    }
+  }
+
+  // Deselect stamp when clicking elsewhere
+  document.addEventListener('mousedown', (e) => {
+    if (selectedStamp && !e.target.closest('.stamp-img') && !e.target.closest('.sidebar')) {
+      document.querySelectorAll('.stamp-img.selected').forEach(s => s.classList.remove('selected'));
+      selectedStamp = null;
+    }
+  });
+
+  // ===== DRAG TO MOVE STAMP =====
+  function startDrag(ev, wrapper) {
+    ev.preventDefault();
+
+    const page    = wrapper.closest('.letterhead-page');
+    const editDiv = wrapper.closest('.lh-editable');
+    if (!page || !editDiv) return;
+
+    // Convert inline stamp to absolutely positioned within lh-content-wrap
+    const contentWrap = page.querySelector('.lh-content-wrap');
+    const wRect  = wrapper.getBoundingClientRect();
+    const cRect  = contentWrap.getBoundingClientRect();
+
+    const startX = wRect.left - cRect.left;
+    const startY = wRect.top  - cRect.top;
+
+    // Move stamp out of flow into absolute position on content-wrap
+    if (wrapper.style.position !== 'absolute') {
+      contentWrap.style.position = 'relative';
+      wrapper.remove(); // remove from editable
+      wrapper.style.position = 'absolute';
+      wrapper.style.left = startX + 'px';
+      wrapper.style.top  = startY + 'px';
+      wrapper.style.zIndex = '20';
+      contentWrap.appendChild(wrapper);
+    }
+
+    const ox = ev.clientX - wrapper.getBoundingClientRect().left;
+    const oy = ev.clientY - wrapper.getBoundingClientRect().top;
+
+    function onMove(e) {
+      const nx = e.clientX - cRect.left - ox;
+      const ny = e.clientY - cRect.top  - oy;
+      wrapper.style.left = Math.max(0, nx) + 'px';
+      wrapper.style.top  = Math.max(0, ny) + 'px';
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup',  onUp);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',  onUp);
+  }
+
+  // ===== RESIZE STAMP =====
+  function startResize(ev, wrapper, img) {
+    ev.preventDefault();
+    const startX = ev.clientX;
+    const startW = parseInt(img.style.width) || 120;
+
+    function onMove(e) {
+      const newW = Math.max(40, startW + (e.clientX - startX));
+      img.style.width   = newW + 'px';
+      wrapper.style.width = newW + 'px';
+      document.getElementById('stampSizeSlider').value = newW;
+      document.getElementById('stampSizeVal').textContent = newW + 'px';
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup',  onUp);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',  onUp);
+  }
+
+  // =========================================================
+  // TEMPLATE SYSTEM
+  // =========================================================
+
+  let currentTemplateId = 'onish-agro'; // default
+
+  // -------------------------------------------------------
+  // Template definitions — header HTML + footer HTML + accent colors
+  // -------------------------------------------------------
+  const TEMPLATES = [
+    {
+      id: 'vansora',
+      name: 'Vansora Agro',
+      badge: 'Default',
+      accent1: '#007b8a',
+      accent2: '#e8862a',
+      headerHTML: `
+        <div class="lh-header-top">
+          <div class="lh-logo-block">
+            <svg class="lh-logo-img" viewBox="0 0 220 90" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="44" cy="44" r="38" fill="none" stroke="#007b8a" stroke-width="3"/>
+              <ellipse cx="44" cy="44" rx="20" ry="38" fill="none" stroke="#007b8a" stroke-width="2"/>
+              <ellipse cx="44" cy="44" rx="38" ry="15" fill="none" stroke="#007b8a" stroke-width="1.5"/>
+              <line x1="6" y1="44" x2="82" y2="44" stroke="#007b8a" stroke-width="1.5"/>
+              <line x1="44" y1="6" x2="44" y2="82" stroke="#007b8a" stroke-width="1.5"/>
+              <path d="M22 65 Q44 72 66 65 L60 58 L28 58 Z" fill="#e8862a"/>
+              <rect x="38" y="48" width="12" height="12" rx="1" fill="#007b8a"/>
+              <path d="M58 12 L80 22 L68 24 L72 32 L64 30 L56 38 L52 26 L40 24 Z" fill="#e8862a"/>
+              <text x="96" y="30" font-family="Arial Black, sans-serif" font-size="22" font-weight="900" fill="#007b8a">Vansora</text>
+              <text x="96" y="46" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#1a1a1a" letter-spacing="3">AGRO PVT. LTD.</text>
+              <line x1="96" y1="50" x2="210" y2="50" stroke="#e8862a" stroke-width="1.5"/>
+              <text x="96" y="63" font-family="Arial, sans-serif" font-size="10" fill="#007b8a" font-style="italic">Trusted Agro Export</text>
+            </svg>
+          </div>
+          <div class="lh-iec-block">
+            <div class="lh-iec-line"><span>IEC:</span> AALCV8693A</div>
+            <div class="lh-iec-line"><span>GSTIN:</span> 08AALCV8693A1ZV</div>
+            <div class="lh-iec-line"><span>LIC:</span> U46301RJ2026PTC111359</div>
+          </div>
+        </div>
+        <div class="lh-divider"></div>`,
+      footerHTML: `
+        <div class="lh-footer-divider"></div>
+        <div class="lh-footer-body">
+          <div class="lh-footer-company">Vansora Agro Pvt. Ltd.</div>
+          <div class="lh-footer-details">
+            <div class="lh-footer-item"><div class="lh-footer-icon icon-phone">📞</div><span>+91 9624790633, +91 76655 77967, +91 77268 58797</span></div>
+            <div class="lh-footer-item"><div class="lh-footer-icon icon-email">✉</div><span>Info.vansoraagro@gmail.com</span></div>
+            <div class="lh-footer-item"><div class="lh-footer-icon icon-web">🌐</div><span>www.vansoraagropvtltd.com</span></div>
+            <div class="lh-footer-item"><div class="lh-footer-icon icon-addr">📍</div><span>House No. 4, Ward No. 13, Vikash Nagar, Chodhani, Chomu, Jaipur (Rajasthan)-303702</span></div>
+          </div>
+        </div>
+        <div class="lh-footer-corner"></div>`
+    },
+    {
+      id: 'minimal',
+      name: 'Simple Minimal',
+      badge: 'Clean',
+      accent1: '#2c3e50',
+      accent2: '#3498db',
+      headerHTML: `
+        <div class="lh-header-top" style="align-items:center;">
+          <div style="display:flex;flex-direction:column;">
+            <span style="font-family:Georgia,serif;font-size:26px;font-weight:700;color:#2c3e50;letter-spacing:1px;">Vansora Agro</span>
+            <span style="font-size:11px;color:#7f8c8d;letter-spacing:3px;text-transform:uppercase;font-family:Arial,sans-serif;">Pvt. Ltd.</span>
+          </div>
+          <div style="text-align:right;font-family:Arial,sans-serif;">
+            <div style="font-size:11px;color:#555;line-height:1.8;">
+              <div><strong>IEC:</strong> AALCV8693A</div>
+              <div><strong>GSTIN:</strong> 08AALCV8693A1ZV</div>
+              <div><strong>LIC:</strong> U46301RJ2026PTC111359</div>
+            </div>
+          </div>
+        </div>
+        <div style="height:1px;background:linear-gradient(to right,#2c3e50,#3498db,transparent);margin:14px 0 0 0;"></div>`,
+      footerHTML: `
+        <div style="height:1px;background:linear-gradient(to right,#2c3e50,#3498db,transparent);margin-bottom:12px;"></div>
+        <div style="padding:14px 32px 18px;font-family:Arial,sans-serif;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#2c3e50;">Vansora Agro Pvt. Ltd.</div>
+            <div style="font-size:11px;color:#555;margin-top:3px;">House No. 4, Ward 13, Vikash Nagar, Chomu, Jaipur (RJ)-303702</div>
+          </div>
+          <div style="text-align:right;font-size:11px;color:#555;line-height:1.8;">
+            <div>📞 +91 9624790633</div>
+            <div>✉ Info.vansoraagro@gmail.com</div>
+            <div>🌐 www.vansoraagropvtltd.com</div>
+          </div>
+        </div>`
+    },
+    {
+      id: 'formal',
+      name: 'Government Formal',
+      badge: 'Official',
+      accent1: '#1a3a1a',
+      accent2: '#8B0000',
+      headerHTML: `
+        <div style="text-align:center;padding-bottom:6px;border-bottom:3px double #1a3a1a;font-family:'Times New Roman',serif;">
+          <div style="font-size:22px;font-weight:900;color:#1a3a1a;letter-spacing:2px;text-transform:uppercase;">Vansora Agro Private Limited</div>
+          <div style="font-size:11px;color:#555;margin-top:4px;letter-spacing:1px;">Trusted Agro Export | House No.4, Ward 13, Vikash Nagar, Chomu, Jaipur (RJ) - 303702</div>
+          <div style="display:flex;justify-content:center;gap:30px;margin-top:6px;font-size:10.5px;color:#333;">
+            <span><strong>IEC:</strong> AALCV8693A</span>
+            <span><strong>GSTIN:</strong> 08AALCV8693A1ZV</span>
+            <span><strong>LIC:</strong> U46301RJ2026PTC111359</span>
+          </div>
+          <div style="height:1px;background:#8B0000;margin-top:8px;"></div>
+        </div>`,
+      footerHTML: `
+        <div style="border-top:3px double #1a3a1a;padding:14px 32px 18px;font-family:'Times New Roman',serif;text-align:center;">
+          <div style="font-size:11px;color:#333;line-height:1.9;">
+            <strong>Vansora Agro Pvt. Ltd.</strong> | +91 9624790633 | Info.vansoraagro@gmail.com | www.vansoraagropvtltd.com
+          </div>
+          <div style="font-size:10px;color:#888;margin-top:3px;">House No. 4, Ward No. 13, Vikash Nagar, Chodhani, Chomu, Jaipur (Rajasthan)-303702</div>
+        </div>`
+    },
+    {
+      id: 'blank',
+      name: 'Blank / Custom',
+      badge: 'Empty',
+      accent1: '#555',
+      accent2: '#999',
+      headerHTML: `
+        <div style="padding:8px 0 0 0;border-bottom:2px solid #ccc;margin-bottom:0;">
+          <div style="font-size:20px;font-weight:700;color:#333;font-family:Arial,sans-serif;">Your Company Name</div>
+          <div style="font-size:11px;color:#888;margin-top:2px;font-family:Arial,sans-serif;">Company tagline / address / contact</div>
+        </div>`,
+      footerHTML: `
+        <div style="border-top:2px solid #ccc;padding:12px 32px 16px;font-family:Arial,sans-serif;font-size:11px;color:#888;text-align:center;">
+          Your Company | Phone | Email | Website
+        </div>`
+    },
+    {
+      id: 'agro-export',
+      name: 'Agro Export Style',
+      badge: 'Pro',
+      accent1: '#007b8a',
+      accent2: '#e8862a',
+      headerHTML: `
+        <div style="display:flex;align-items:stretch;gap:0;padding:0;font-family:Arial,sans-serif;">
+          <!-- Left: Logo block -->
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 20px 10px 0;min-width:140px;">
+            <svg viewBox="0 0 220 90" style="width:130px;height:auto;" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="44" cy="44" r="38" fill="none" stroke="#007b8a" stroke-width="3"/>
+              <ellipse cx="44" cy="44" rx="20" ry="38" fill="none" stroke="#007b8a" stroke-width="2"/>
+              <ellipse cx="44" cy="44" rx="38" ry="15" fill="none" stroke="#007b8a" stroke-width="1.5"/>
+              <line x1="6" y1="44" x2="82" y2="44" stroke="#007b8a" stroke-width="1.5"/>
+              <line x1="44" y1="6" x2="44" y2="82" stroke="#007b8a" stroke-width="1.5"/>
+              <path d="M22 65 Q44 72 66 65 L60 58 L28 58 Z" fill="#e8862a"/>
+              <rect x="38" y="48" width="12" height="12" rx="1" fill="#007b8a"/>
+              <path d="M58 12 L80 22 L68 24 L72 32 L64 30 L56 38 L52 26 L40 24 Z" fill="#e8862a"/>
+              <text x="96" y="28" font-family="Arial Black,sans-serif" font-size="20" font-weight="900" fill="#007b8a">Vansora</text>
+              <text x="96" y="43" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#333" letter-spacing="2">AGRO PVT. LTD.</text>
+              <line x1="96" y1="47" x2="210" y2="47" stroke="#e8862a" stroke-width="1.2"/>
+              <text x="96" y="60" font-family="Arial,sans-serif" font-size="9" fill="#007b8a" font-style="italic">IMPORTS | EXPORTS | DISTRIBUTION</text>
+            </svg>
+          </div>
+          <!-- Vertical divider -->
+          <div style="width:2px;background:linear-gradient(to bottom,#e8862a,#007b8a);margin:10px 0;border-radius:2px;flex-shrink:0;"></div>
+          <!-- Right: Contact details -->
+          <div style="flex:1;padding:14px 0 10px 20px;display:flex;flex-direction:column;justify-content:center;gap:5px;">
+            <div style="font-size:18px;font-weight:900;color:#007b8a;font-family:Arial Black,sans-serif;letter-spacing:0.5px;margin-bottom:4px;">VANSORA AGRO EXPORTS</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:#333;">
+              <span style="background:#25D366;color:#fff;border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;">✆</span>
+              <span>+91 9624790633 &nbsp;|&nbsp; +91 76655 77967 &nbsp;|&nbsp; +91 77268 58797</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:#333;">
+              <span style="background:#007b8a;color:#fff;border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;">🌐</span>
+              <span>www.vansoraagropvtltd.com</span>
+              <span style="background:#e8862a;color:#fff;border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;">✉</span>
+              <span>Info.vansoraagro@gmail.com</span>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:8px;font-size:11px;color:#333;">
+              <span style="background:#555;color:#fff;border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;margin-top:1px;">📍</span>
+              <span>House No. 4, Ward No. 13, Vikash Nagar, Chodhani, Chomu, Jaipur (Rajasthan) - 303702</span>
+            </div>
+          </div>
+        </div>
+        <div style="height:2px;background:linear-gradient(to right,#e8862a 40%,#007b8a 100%);margin-top:8px;"></div>
+        <div style="height:3px;background:linear-gradient(to right,#007b8a 40%,#e8862a 100%);margin-top:2px;"></div>`,
+      footerHTML: `
+        <div style="font-family:Arial,sans-serif;">
+          <div style="border-top:1px solid #ddd;padding:12px 32px 6px;text-align:center;font-size:12px;font-weight:700;color:#333;letter-spacing:1px;">
+            IEC CODE: AALCV8693A &nbsp;&nbsp;|&nbsp;&nbsp; GST NO.: 08AALCV8693A1ZV &nbsp;&nbsp;|&nbsp;&nbsp; LIC: U46301RJ2026PTC111359
+          </div>
+          <div style="display:flex;height:8px;">
+            <div style="flex:1;background:#007b8a;"></div>
+            <div style="flex:1;background:#e8862a;"></div>
+          </div>
+        </div>`
+    },
+    {
+      id: 'onish-agro',
+      name: 'Onish Agro Exports',
+      badge: 'New',
+      accent1: '#8B1A6B',
+      accent2: '#4CAF50',
+      headerHTML: `
+        <div class="lh-header-top" style="display: flex; align-items: stretch; padding-bottom: 6px;">
+          <div class="lh-logo-block" style="flex: 0 0 205px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-right: 15px;">
+            <svg viewBox="0 0 168 120" style="width: 80px; height: auto;" xmlns="http://www.w3.org/2000/svg">
+              <path d="M84 2 C84 2 76 8 72 16 C64 16 50 20 42 30 C30 44 30 62 38 76 C46 90 64 100 84 100 C104 100 122 90 130 76 C138 62 138 44 126 30 C118 20 104 16 96 16 C92 8 84 2 84 2 Z" fill="#b21f66"/>
+              <path d="M84 10 C78 16 74 22 72 26 C65 27 54 31 48 39 C40 50 40 64 47 75 C54 86 68 93 84 93 C100 93 114 86 121 75 C128 64 128 50 120 39 C114 31 103 27 96 26 C94 22 90 16 84 10 Z" fill="white"/>
+              <path d="M54 82 L84 54 L114 82" fill="none" stroke="#b21f66" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M58 90 L84 64 L110 90" fill="none" stroke="#b21f66" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M63 97 L84 74 L105 97" fill="none" stroke="#b21f66" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M76 57 L84 44 L92 57 L90 57 L90 66 L78 66 L78 57 Z" fill="#b21f66"/>
+            </svg>
+            <svg viewBox="0 0 180 40" style="width: 135px; height: auto; margin-top: 4px;" xmlns="http://www.w3.org/2000/svg">
+              <path d="M 18,6 C 14,2 8,6 8,18 C 8,30 14,34 18,34 C 22,34 28,30 28,18 C 28,6 22,2 18,6 Z" fill="none" stroke="#82b93c" stroke-width="3"/>
+              <path d="M 16,0 C 12,-4 12,2 16,2 C 20,2 20,-4 16,0 Z" fill="#82b93c" transform="translate(2,4)"/>
+              <path d="M 20,0 C 24,-4 24,2 20,2 C 16,2 16,-4 20,0 Z" fill="#82b93c" transform="translate(-2,4)"/>
+              <text x="32" y="32" font-family="'Arial Black', Arial, sans-serif" font-size="28" font-weight="900" fill="#82b93c" letter-spacing="-1">nish</text>
+              <text x="100" y="32" font-family="'Arial Black', Arial, sans-serif" font-size="28" font-weight="900" fill="#82b93c" letter-spacing="-1">A</text>
+              <path d="M 111,8 C 105,2 105,8 111,10 C 117,8 117,2 111,8 Z" fill="#82b93c"/>
+              <text x="122" y="32" font-family="'Arial Black', Arial, sans-serif" font-size="28" font-weight="900" fill="#82b93c" letter-spacing="-1">gro</text>
+            </svg>
+            <div style="font-family: Arial, sans-serif; font-size: 8px; font-weight: 800; color: #b21f66; letter-spacing: 2px; margin-top: 2px;">EXPORTS</div>
+            <div style="font-family: Arial, sans-serif; font-size: 5px; font-weight: 600; color: #555; letter-spacing: 0.5px; margin-top: 3px;">IMPORTS | EXPORTS | DISTRIBUTION</div>
+          </div>
+          
+          <div style="width: 1px; background-color: #e0b0c0; margin-right: 25px; margin-top: 10px; margin-bottom: 10px;"></div>
+          
+          <div class="lh-details-block" style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 6px;">
+            <div style="font-size: 20px; font-weight: 800; color: #b21f66; font-family: 'Inter', sans-serif; letter-spacing: 0px;">ONISH AGRO EXPORTS</div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: #111; font-weight: 600; font-family: 'Inter', sans-serif;">
+              <span style="display: inline-flex; justify-content: center; align-items: center; width: 14px; height: 14px; background: #82b93c; color: white; border-radius: 50%; font-size: 9px;">📞</span>
+              +91 9011340007
+            </div>
+            <div style="display: flex; align-items: center; gap: 18px; font-size: 11px; color: #111; font-weight: 600; font-family: 'Inter', sans-serif;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="display: inline-flex; justify-content: center; align-items: center; width: 14px; height: 14px; background: #82b93c; color: white; border-radius: 50%; font-size: 9px;">🌐</span>
+                www.onishagroexports.com
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="display: inline-flex; justify-content: center; align-items: center; width: 14px; height: 14px; background: #82b93c; color: white; border-radius: 50%; font-size: 9px;">✉</span>
+                onishagroexports@gmail.com
+              </div>
+            </div>
+            <div style="display: flex; align-items: flex-start; gap: 8px; font-size: 11px; color: #111; font-weight: 600; font-family: 'Inter', sans-serif; line-height: 1.4;">
+              <span style="display: inline-flex; justify-content: center; align-items: center; width: 14px; height: 14px; background: #82b93c; color: white; border-radius: 50%; font-size: 9px; flex-shrink: 0; margin-top: 1px;">📍</span>
+              <span>Shri ramchandra bungalow plot no. A10 street no.4 serene meadows,<br>Gangapur rd anandwali, Nashik - 422013</span>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; height: 1.5px; margin-top: 0px;">
+          <div style="flex: 0 0 205px; background-color: #b21f66;"></div>
+          <div style="flex: 1; background-color: #82b93c;"></div>
+        </div>`,
+      footerHTML: `
+        <div style="text-align: center; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700; color: #333; padding-bottom: 16px;">
+          IEC CODE: AWVPP4470E &nbsp;|&nbsp; GST NO.: 27AWVPP4470E1Z0
+        </div>
+        <div style="position: relative; height: 35px; width: 100%; background: #b21f66;">
+          <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 85%; background: #82b93c; clip-path: polygon(0 0, 100% 0, 96% 100%, 0 100%);"></div>
+        </div>`,
+      watermarkHTML: `
+        <div style="display: flex; justify-content: center; align-items: center; padding-top: 100px; width: 100%; height: 100%;">
+          <svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg" style="width: 500px; height: 500px; opacity: 0.25;">
+            <path d="M100 4 C100 4 90 12 86 22 C76 23 60 28 50 40 C36 56 36 78 46 96 C56 114 76 126 100 126 C124 126 144 114 154 96 C164 78 164 56 150 40 C140 28 124 23 114 22 C110 12 100 4 100 4 Z" fill="#eaeaea"/>
+            <path d="M100 14 C94 20 90 28 88 34 C79 35 65 40 57 50 C47 64 47 80 55 94 C63 108 80 118 100 118 C120 118 137 108 145 94 C153 80 153 64 143 50 C135 40 121 35 112 34 C110 28 106 20 100 14 Z" fill="white"/>
+            <path d="M62 104 L100 68 L138 104" fill="none" stroke="#eaeaea" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M67 114 L100 80 L133 114" fill="none" stroke="#eaeaea" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M73 124 L100 92 L127 124" fill="none" stroke="#eaeaea" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M90 72 L100 56 L110 72 L107 72 L107 85 L93 85 L93 72 Z" fill="#eaeaea"/>
+            <path d="M95 22 C89 12 79 5 83 0 C87 0 95 10 95 22 Z" fill="#eaeaea"/>
+            <path d="M100 20 L100 0" stroke="#eaeaea" stroke-width="4" stroke-linecap="round"/>
+            <path d="M105 22 C111 12 121 5 117 0 C113 0 105 10 105 22 Z" fill="#eaeaea"/>
+          </svg>
+        </div>`
+    }
+  ];
+
+  // -------------------------------------------------------
+  // Render template cards in modal
+  // -------------------------------------------------------
+  function renderTemplateCards() {
+    const grid = document.getElementById('templateGrid');
+    grid.innerHTML = '';
+    TEMPLATES.forEach(tpl => {
+      const card = document.createElement('div');
+      card.className = 'template-card' + (tpl.id === currentTemplateId ? ' active-template' : '');
+      card.onclick = () => applyTemplate(tpl.id);
+
+      // Mini colour preview strip instead of iframe (fast & reliable)
+      card.innerHTML = `
+        <div class="template-preview" style="background:#fff;">
+          <div style="padding:8px 10px 0;transform:scale(0.26);transform-origin:top left;width:385%;height:385%;overflow:hidden;pointer-events:none;">
+            <div style="font-family:Arial,sans-serif;border-bottom:2px solid ${tpl.accent1};">
+              ${tpl.headerHTML}
+            </div>
+            <div style="height:80px;background:linear-gradient(180deg,#f8f8f8,#fff);margin:10px 0;border-left:3px solid ${tpl.accent2};padding-left:6px;">
+              <div style="height:8px;background:#e0e0e0;border-radius:4px;margin:10px 6px 6px;"></div>
+              <div style="height:6px;background:#ebebeb;border-radius:4px;margin:0 6px 6px;"></div>
+              <div style="height:6px;background:#ebebeb;border-radius:4px;margin:0 6px;width:70%;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="template-card-footer">
+          <span class="template-card-name">${tpl.name}</span>
+          <span class="template-card-badge">${tpl.id === currentTemplateId ? '✓ Active' : tpl.badge}</span>
+        </div>`;
+      grid.appendChild(card);
+    });
+  }
+
+  // -------------------------------------------------------
+  // Open / Close modal
+  // -------------------------------------------------------
+  function openTemplateModal() {
+    renderTemplateCards();
+    document.getElementById('templateOverlay').classList.add('visible');
+    document.getElementById('templateModal').classList.add('open');
+  }
+  function closeTemplateModal() {
+    document.getElementById('templateOverlay').classList.remove('visible');
+    document.getElementById('templateModal').classList.remove('open');
+  }
+
+  // -------------------------------------------------------
+  // UPLOADED TEMPLATE — background / header / footer image
+  // -------------------------------------------------------
+  function applyUploadedTemplate(event, mode) {
+    const file = event.target.files[0];
+    if (!file) return;
+    event.target.value = ''; // reset so same file can be re-uploaded
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const src = e.target.result;
+
+      document.querySelectorAll('.letterhead-page').forEach(page => {
+
+        if (mode === 'background') {
+          // Full page — image covers the whole page, text overlays on top
+          page.style.backgroundImage    = `url('${src}')`;
+          page.style.backgroundSize     = 'cover';
+          page.style.backgroundPosition = 'center';
+          page.style.backgroundRepeat   = 'no-repeat';
+
+          // Hide default header/footer so only image shows
+          const hdr = page.querySelector('.lh-header');
+          const ftr = page.querySelector('.lh-footer');
+          if (hdr) hdr.style.visibility = 'hidden';
+          if (ftr) ftr.style.visibility = 'hidden';
+
+          // Show background controls
+          document.getElementById('bgControls').style.display = 'block';
+
+        } else if (mode === 'header') {
+          // Replace header content with uploaded image
+          const hdr = page.querySelector('.lh-header');
+          if (hdr) {
+            hdr.style.visibility = 'visible';
+            hdr.innerHTML = `<img src="${src}" style="width:100%;display:block;max-height:160px;object-fit:contain;" />`;
+          }
+          setTimeout(recalcEditableHeights, 100);
+
+        } else if (mode === 'footer') {
+          // Replace footer content with uploaded image
+          const ftr = page.querySelector('.lh-footer');
+          if (ftr) {
+            ftr.style.visibility = 'visible';
+            ftr.innerHTML = `<img src="${src}" style="width:100%;display:block;max-height:120px;object-fit:contain;" />`;
+          }
+          setTimeout(recalcEditableHeights, 100);
+        }
+      });
+
+      currentTemplateId = 'custom-upload';
+      showToast(`Custom ${mode} image applied! ✓`, 'success');
+      if (mode !== 'background') closeTemplateModal();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function updateBgStyle() {
+    const opacity = document.getElementById('bgOpacitySlider').value;
+    const size    = document.getElementById('bgSizeSelect').value;
+    document.getElementById('bgOpacityVal').textContent = opacity + '%';
+
+    document.querySelectorAll('.letterhead-page').forEach(page => {
+      if (page.style.backgroundImage) {
+        page.style.backgroundSize = size;
+        page.style.opacity = '1'; // keep page opacity full
+        // Apply opacity via a pseudo-overlay using mix-blend-mode isn't ideal;
+        // use a wrapper div approach instead:
+        let overlay = page.querySelector('.bg-opacity-overlay');
+        if (!overlay) {
+          overlay = document.createElement('div');
+          overlay.className = 'bg-opacity-overlay';
+          overlay.style.cssText = `
+            position:absolute;inset:0;z-index:0;
+            background:rgba(255,255,255,${(100 - opacity)/100});
+            pointer-events:none;
+          `;
+          page.insertBefore(overlay, page.firstChild);
+        } else {
+          overlay.style.background = `rgba(255,255,255,${(100 - opacity)/100})`;
+        }
+      }
+    });
+  }
+
+  function removeBgTemplate() {
+    document.querySelectorAll('.letterhead-page').forEach(page => {
+      page.style.backgroundImage = '';
+      page.style.backgroundSize  = '';
+      const overlay = page.querySelector('.bg-opacity-overlay');
+      if (overlay) overlay.remove();
+      // Restore header/footer visibility
+      const hdr = page.querySelector('.lh-header');
+      const ftr = page.querySelector('.lh-footer');
+      if (hdr) hdr.style.visibility = 'visible';
+      if (ftr) ftr.style.visibility = 'visible';
+    });
+    document.getElementById('bgControls').style.display = 'none';
+    currentTemplateId = 'vansora';
+    showToast('Background removed', 'info');
+  }
+
+  // -------------------------------------------------------
+  // Apply selected template to ALL pages
+  // -------------------------------------------------------
+  function applyTemplate(tplId) {
+    const tpl = TEMPLATES.find(t => t.id === tplId);
+    if (!tpl) return;
+
+    // Ask confirmation only if switching away from current
+    if (tplId !== currentTemplateId) {
+      if (!confirm(`Switch to "${tpl.name}" template?\n\nYour typed content will be preserved.`)) return;
+    }
+
+    currentTemplateId = tplId;
+
+    // Update every page header, footer, AND watermark
+    document.querySelectorAll('.letterhead-page').forEach(page => {
+      const header = page.querySelector('.lh-header');
+      if (header) header.innerHTML = tpl.headerHTML;
+
+      const footer = page.querySelector('.lh-footer');
+      if (footer) footer.innerHTML = tpl.footerHTML;
+
+      // Swap watermark if template defines one
+      const watermark = page.querySelector('.lh-watermark');
+      if (watermark && tpl.watermarkHTML) {
+        watermark.innerHTML = tpl.watermarkHTML;
+      } else if (watermark && !tpl.watermarkHTML) {
+        // Restore default Vansora globe watermark
+        watermark.innerHTML = `<svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="110" cy="110" r="100" fill="none" stroke="#007b8a" stroke-width="6"/>
+          <ellipse cx="110" cy="110" rx="55" ry="100" fill="none" stroke="#007b8a" stroke-width="4"/>
+          <ellipse cx="110" cy="110" rx="100" ry="40" fill="none" stroke="#007b8a" stroke-width="3"/>
+          <line x1="10" y1="110" x2="210" y2="110" stroke="#007b8a" stroke-width="3"/>
+          <line x1="110" y1="10" x2="110" y2="210" stroke="#007b8a" stroke-width="3"/>
+          <path d="M62 168 Q110 185 158 168 L148 150 L72 150 Z" fill="#e8862a"/>
+          <rect x="98" y="122" width="24" height="30" rx="2" fill="#007b8a"/>
+          <path d="M148 38 L195 60 L170 64 L178 84 L158 78 L138 98 L128 66 L100 62 Z" fill="#e8862a"/>
+        </svg>`;
+      }
+    });
+
+    // Recalculate editable heights since header/footer size may differ
+    setTimeout(recalcEditableHeights, 100);
+
+    showToast(`Template "${tpl.name}" applied!`, 'success');
+    closeTemplateModal();
+  }
+
+  // =========================================================
+  // CLEAR CONTENT
+  // =========================================================
+  function clearContent() {
+    if (confirm('Clear all content from the document?')) {
+      document.querySelectorAll('.lh-editable').forEach(ed => { ed.innerHTML = ''; });
+      updateToolbarState();
+      showToast('Content cleared', 'info');
+    }
+  }
+
+  // =========================================================
+  // KEYBOARD SHORTCUTS (via container delegation)
+  // =========================================================
+  docContainer.addEventListener('keydown', (e) => {
+    if (!e.target.classList.contains('lh-editable')) return;
+    if (e.ctrlKey || e.metaKey) {
+      switch (e.key.toLowerCase()) {
+        case 'b': e.preventDefault(); toggleFormat('bold');      break;
+        case 'i': e.preventDefault(); toggleFormat('italic');    break;
+        case 'u': e.preventDefault(); toggleFormat('underline'); break;
+      }
+    }
+    // Tab = indent
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      document.execCommand('insertHTML', false, '&nbsp;&nbsp;&nbsp;&nbsp;');
+    }
+  });
+
+  // =========================================================
+  // EXPORT PDF
+  // =========================================================
+  document.getElementById('exportPdfBtn').addEventListener('click', async () => {
+    showLoading('Generating PDF…');
+    try {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pages = document.querySelectorAll('.letterhead-page');
+      
+      // Temporarily hide edit indicators and focus
+      if (activeEditable) activeEditable.blur();
+      const container = document.getElementById('documentContainer');
+      const prevEditing = container.querySelectorAll('.editing');
+      prevEditing.forEach(p => p.classList.remove('editing'));
+
+      for (let i = 0; i < pages.length; i++) {
+        const page = pages[i];
+        
+        // Hide delete button for export
+        const delBtn = page.querySelector('.page-delete-btn');
+        if (delBtn) delBtn.style.display = 'none';
+
+        const canvas = await html2canvas(page, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+          windowWidth: page.scrollWidth,
+          windowHeight: page.scrollHeight,
+        });
+
+        if (delBtn) delBtn.style.display = ''; // restore
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        const pdfW = pdf.internal.pageSize.getWidth();
+        const pdfH = pdf.internal.pageSize.getHeight();
+
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
+        
+        if (i < pages.length - 1) {
+          pdf.addPage();
+        }
+      }
+
+      pdf.save('Vansora_Letterhead.pdf');
+      showToast('PDF exported successfully!', 'success');
+    } catch(err) {
+      console.error(err);
+      showToast('PDF export failed. Try again.', 'error');
+    } finally {
+      hideLoading();
+    }
+  });
+
+  // =========================================================
+  // EXPORT PNG
+  // =========================================================
+  document.getElementById('exportPngBtn').addEventListener('click', async () => {
+    showLoading('Generating PNG…');
+    try {
+      const container = document.getElementById('documentContainer');
+      if (activeEditable) activeEditable.blur();
+      
+      // Hide delete buttons temporarily
+      const delBtns = document.querySelectorAll('.page-delete-btn');
+      delBtns.forEach(b => b.style.display = 'none');
+
+      const canvas = await html2canvas(container, {
+        scale: 2.5,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+      });
+
+      delBtns.forEach(b => b.style.display = '');
+
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Vansora_Letterhead.png';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('PNG exported successfully!', 'success');
+      }, 'image/png');
+    } catch(err) {
+      console.error(err);
+      showToast('PNG export failed. Try again.', 'error');
+    } finally {
+      hideLoading();
+    }
+  });
+
+  // =========================================================
+  // PRINT
+  // =========================================================
+  document.getElementById('printBtn').addEventListener('click', () => {
+    if (activeEditable) activeEditable.blur();
+    window.print();
+  });
+
+  // =========================================================
+  // ADMIN PANEL
+  // =========================================================
+  document.getElementById('adminBtn').addEventListener('click', openAdmin);
+
+  function openAdmin() {
+    document.getElementById('adminPanel').classList.add('open');
+    document.getElementById('adminOverlay').classList.add('visible');
+  }
+
+  function closeAdmin() {
+    document.getElementById('adminPanel').classList.remove('open');
+    document.getElementById('adminOverlay').classList.remove('visible');
+  }
+
+  function updateTemplate() {
+    // IEC lines
+    const iecLines = document.querySelectorAll('.lh-iec-line');
+    const iec   = document.getElementById('adminIEC').value;
+    const gstin = document.getElementById('adminGSTIN').value;
+    const lic   = document.getElementById('adminLIC').value;
+    if (iecLines[0]) iecLines[0].innerHTML = `<span>IEC:</span> ${iec}`;
+    if (iecLines[1]) iecLines[1].innerHTML = `<span>GSTIN:</span> ${gstin}`;
+    if (iecLines[2]) iecLines[2].innerHTML = `<span>LIC:</span> ${lic}`;
+
+    // Footer details
+    const footerItems = document.querySelectorAll('.lh-footer-item span');
+    if (footerItems[0]) footerItems[0].textContent = document.getElementById('adminPhone').value;
+    if (footerItems[1]) footerItems[1].textContent = document.getElementById('adminEmail').value;
+    if (footerItems[2]) footerItems[2].textContent = document.getElementById('adminWebsite').value;
+    if (footerItems[3]) footerItems[3].textContent = document.getElementById('adminAddress').value;
+
+    // Company name
+    const compName = document.getElementById('adminCompanyName').value;
+    const footerCompany = document.querySelector('.lh-footer-company');
+    if (footerCompany) footerCompany.textContent = compName;
+  }
+
+  function updateDefaultFont() {
+    const font = document.getElementById('adminFont').value;
+    document.querySelectorAll('.lh-editable').forEach(ed => { ed.style.fontFamily = font; });
+    document.getElementById('fontFamily').value = font;
+  }
+
+  function updateContentHeight() {
+    // Deprecated for multi-page (we use locked A4 size now).
+    // Can leave this empty or remove the option from admin.
+  }
+
+  function handleLogoUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      // Replace SVG logo with uploaded image
+      const logoBlock = document.querySelector('.lh-logo-block');
+      if (logoBlock) {
+        logoBlock.innerHTML = `<img src="${e.target.result}" style="max-height:80px;max-width:160px;object-fit:contain;" alt="Company Logo" />`;
+      }
+      showToast('Logo updated!', 'success');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function saveAdminSettings() {
+    updateTemplate();
+    closeAdmin();
+    showToast('Settings saved!', 'success');
+  }
+
+  // =========================================================
+  // TOAST NOTIFICATIONS
+  // =========================================================
+  function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+    toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3200);
+  }
+
+  // =========================================================
+  // LOADING OVERLAY
+  // =========================================================
+  function showLoading(text = 'Processing…') {
+    document.getElementById('loadingText').textContent = text;
+    document.getElementById('loadingOverlay').classList.add('show');
+  }
+  function hideLoading() {
+    document.getElementById('loadingOverlay').classList.remove('show');
+  }
+
+  // =========================================================
+  // INIT — prevent editing header / footer on all pages
+  // =========================================================
+  // Use delegation on docContainer: clicking any non-header/footer area
+  // on any page focuses that page's editable
+  docContainer.addEventListener('click', (e) => {
+    const page = e.target.closest('.letterhead-page');
+    if (!page) return;
+    const inHeader = e.target.closest('.lh-header');
+    const inFooter = e.target.closest('.lh-footer');
+    const inDelBtn = e.target.closest('.page-delete-btn');
+    if (!inHeader && !inFooter && !inDelBtn) {
+      page.querySelector('.lh-editable').focus();
+    }
+  });
+
+  // Initial word count
+  updateToolbarState();
+
+  // Welcome toast
+  setTimeout(() => showToast('Click inside the document to start editing', 'info'), 600);
+</script>
+</body>
+</html>
