@@ -1108,6 +1108,66 @@
       color: #8892b0;
       font-size: 11px;
     }
+    /* ===== RESPONSIVE MOBILE LAYOUT ===== */
+    @media (max-width: 900px) {
+      .app-layout {
+        display: flex;
+        flex-direction: column;
+      }
+      .app-nav {
+        flex-direction: column;
+        height: auto;
+        padding: 15px;
+        gap: 15px;
+      }
+      .nav-actions {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .editor-area {
+        order: 1;
+        padding: 20px 0;
+        overflow-x: hidden;
+      }
+      .sidebar {
+        order: 2;
+        border-right: none;
+        border-top: 1px solid var(--border);
+      }
+      .letterhead-page {
+        transform: scale(0.48);
+        transform-origin: top center;
+        margin-bottom: -580px; 
+      }
+      .modal-content {
+        width: 95%;
+        padding: 20px;
+      }
+      .template-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 500px) {
+      .letterhead-page {
+        transform: scale(0.44);
+        margin-bottom: -628px;
+      }
+    }
+    
+    @media (max-width: 420px) {
+      .letterhead-page {
+        transform: scale(0.40);
+        margin-bottom: -673px;
+      }
+    }
+    
+    @media (max-width: 360px) {
+      .letterhead-page {
+        transform: scale(0.35);
+        margin-bottom: -730px;
+      }
+    }
   </style>
 </head>
 <body>
